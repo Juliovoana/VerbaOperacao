@@ -174,8 +174,21 @@
 <script>
   const SUPABASE_URL_PADRAO = 'https://frzvcrcshkpvjdbbqkhz.supabase.co';
   const SUPABASE_ANON_KEY_PADRAO = 'sb_publishable_h-JuDyjYgb5YKGYFRKtLEg_8gnJor9w';
-  let SUPABASE_URL = localStorage.getItem('sicon_supabase_url') || SUPABASE_URL_PADRAO;
-  let SUPABASE_ANON_KEY = localStorage.getItem('sicon_supabase_key') || SUPABASE_ANON_KEY_PADRAO;
+
+  function configSalvaParecValida(url, key){
+    return !!url && !!key
+      && /^https:\/\/.+\.supabase\.co/i.test(url)
+      && key.length > 20
+      && !url.includes('COLE_AQUI')
+      && !key.includes('COLE_AQUI');
+  }
+
+  const urlSalva = localStorage.getItem('sicon_supabase_url');
+  const keySalva = localStorage.getItem('sicon_supabase_key');
+  const usarConfigSalva = configSalvaParecValida(urlSalva, keySalva);
+
+  let SUPABASE_URL = usarConfigSalva ? urlSalva : SUPABASE_URL_PADRAO;
+  let SUPABASE_ANON_KEY = usarConfigSalva ? keySalva : SUPABASE_ANON_KEY_PADRAO;
 </script>
 
 <!-- ============================================================
