@@ -191,10 +191,19 @@
       <label for="login-senha">Senha</label>
       <input type="password" id="login-senha" autocomplete="current-password" placeholder="••••••••">
     </div>
+    <div class="field hidden" id="campo-confirmar-senha">
+      <label for="login-senha-confirmar">Confirmar senha</label>
+      <input type="password" id="login-senha-confirmar" autocomplete="new-password" placeholder="••••••••">
+    </div>
     <button class="btn btn-primary" id="btn-login" style="margin-top:4px;">Entrar</button>
+    <button class="btn btn-primary hidden" id="btn-cadastrar" style="margin-top:4px;">Criar conta</button>
     <p class="msg-erro" id="login-erro"></p>
 
-    <p style="text-align:center;margin-top:16px;">
+    <p style="text-align:center;margin-top:10px;">
+      <button id="btn-alternar-cadastro" style="background:none;border:none;color:var(--texto-fraco);font-size:.8rem;cursor:pointer;text-decoration:underline;">Ainda não tem conta? Criar conta</button>
+    </p>
+
+    <p style="text-align:center;margin-top:6px;">
       <button id="btn-abrir-config" style="background:none;border:none;color:var(--texto-fraco);font-size:.78rem;cursor:pointer;text-decoration:underline;">⚙️ Configurações do banco de dados</button>
     </p>
 
@@ -449,6 +458,49 @@
 
   $('btn-sair').addEventListener('click', async () => { await sb.auth.signOut(); location.reload(); });
 
+  // ---------- alternar entre login e criar conta ----------
+  let modoCadastro = false;
+  $('btn-alternar-cadastro').addEventListener('click', () => {
+    modoCadastro = !modoCadastro;
+    $('campo-confirmar-senha').classList.toggle('hidden', !modoCadastro);
+    $('btn-login').classList.toggle('hidden', modoCadastro);
+    $('btn-cadastrar').classList.toggle('hidden', !modoCadastro);
+    $('btn-alternar-cadastro').textContent = modoCadastro ? 'Já tem conta? Entrar' : 'Ainda não tem conta? Criar conta';
+    $('login-erro').className = 'msg-erro';
+    $('login-erro').textContent = '';
+  });
+
+  $('btn-cadastrar').addEventListener('click', async () => {
+    if(!sb){ $('login-erro').textContent = 'Configure a URL e a chave do Supabase antes de criar conta.'; return; }
+    const email = $('login-email').value.trim();
+    const senha = $('login-senha').value;
+    const confirmar = $('login-senha-confirmar').value;
+    $('login-erro').className = 'msg-erro';
+    $('login-erro').textContent = '';
+
+    if(!email || !senha || !confirmar){ $('login-erro').textContent = 'Preencha e-mail, senha e confirmação.'; return; }
+    if(senha.length < 6){ $('login-erro').textContent = 'A senha precisa ter pelo menos 6 caracteres.'; return; }
+    if(senha !== confirmar){ $('login-erro').textContent = 'As senhas não coincidem.'; return; }
+
+    try{
+      $('btn-cadastrar').disabled = true;
+      const { data, error } = await sb.auth.signUp({ email, password: senha });
+      $('btn-cadastrar').disabled = false;
+      if(error){ $('login-erro').textContent = 'Não foi possível criar a conta: ' + error.message; return; }
+
+      if(data.session){
+        await onLogin();
+      } else {
+        $('login-erro').className = 'msg-ok';
+        $('login-erro').textContent = 'Conta criada! Verifique seu e-mail para confirmar antes de entrar.';
+      }
+    }catch(e){
+      $('btn-cadastrar').disabled = false;
+      $('login-erro').textContent = 'Erro de conexão ao criar conta. (' + (e?.message||e) + ')';
+      console.error(e);
+    }
+  });
+
   async function checkSession(){
     const { data:{ session } } = await sb.auth.getSession();
     if(session){ await onLogin(); }
@@ -594,7 +646,22 @@
       });
     });
   }
-  ligarEnterAvancaCampos(['login-email','login-senha'], $('btn-login'));
+  $('login-email').addEventListener('keydown', (e) => {
+    if(e.key !== 'Enter') return;
+    e.preventDefault();
+    $('login-senha').focus();
+  });
+  $('login-senha').addEventListener('keydown', (e) => {
+    if(e.key !== 'Enter') return;
+    e.preventDefault();
+    if(modoCadastro){ $('login-senha-confirmar').focus(); }
+    else{ $('btn-login').click(); }
+  });
+  $('login-senha-confirmar').addEventListener('keydown', (e) => {
+    if(e.key !== 'Enter') return;
+    e.preventDefault();
+    $('btn-cadastrar').click();
+  });
   ligarEnterAvancaCampos(['cfg-url','cfg-key'], $('btn-salvar-config'));
   ligarEnterAvancaCampos(
     ['sel-subconta','in-data','val-entrada','val-saida','in-historico','in-centrocusto'],
