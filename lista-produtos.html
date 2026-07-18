@@ -9,6 +9,30 @@
     * { box-sizing: border-box; }
     body { font-family: Arial, sans-serif; margin: 20px; }
     input[type="text"] { padding: 10px; width: 100%; max-width: 400px; margin-bottom: 15px; }
+    .linha-busca {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        max-width: 400px;
+        margin-bottom: 15px;
+    }
+    .linha-busca input[type="text"] { margin-bottom: 0; flex: 1; }
+    .btn-buscar-manual {
+        display: none;
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        border: none;
+        border-radius: 4px;
+        background-color: #1565c0;
+        color: #fff;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+    }
+    .btn-buscar-manual svg { width: 18px; height: 18px; }
+    .btn-buscar-manual:hover { background-color: #0d4d99; }
+    .btn-buscar-manual.visivel { display: flex; }
     .linha-topo {
         display: flex;
         justify-content: space-between;
@@ -257,9 +281,26 @@
         <button class="btn-salvar-online" id="btnSalvarOnline">Salvar e conectar</button>
         <button class="btn-atualizar-agora" id="btnAtualizarAgora">Atualizar agora</button>
     </div>
+    <div class="linha-config">
+        <div>
+            <label for="modoBusca">Modo de busca</label>
+            <select id="modoBusca">
+                <option value="tempo-real">Buscar a cada caractere digitado</option>
+                <option value="botao" selected>Buscar só ao clicar no botão (mais rápido em listas grandes)</option>
+            </select>
+        </div>
+    </div>
     <span id="ultimaAtualizacao"></span>
 </div>
-<input type="text" id="buscar" placeholder="Digite para buscar...">
+<div class="linha-busca">
+    <input type="text" id="buscar" placeholder="Digite para buscar...">
+    <button id="btnBuscarManual" class="btn-buscar-manual" title="Buscar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+    </button>
+</div>
 <span id="statusImport"></span>
 <span id="contadorProdutos"></span>
 <span id="dataGeracaoCsv"></span>
@@ -340,8 +381,45 @@ function aplicarFiltros() {
 // Carregar todos ao iniciar
 aplicarFiltros();
 
-// Filtro de busca
-document.getElementById("buscar").addEventListener("input", aplicarFiltros);
+// Filtro de busca - respeita o modo escolhido (tempo real ou por botão)
+const MODO_BUSCA_KEY = "modoBuscaCaractere";
+
+function carregarModoBusca() {
+    return localStorage.getItem(MODO_BUSCA_KEY) || "botao";
+}
+
+function salvarModoBusca(modo) {
+    localStorage.setItem(MODO_BUSCA_KEY, modo);
+}
+
+function aplicarModoBusca(modo) {
+    const btnBuscarManual = document.getElementById("btnBuscarManual");
+    const inputBusca = document.getElementById("buscar");
+    if (modo === "botao") {
+        inputBusca.removeEventListener("input", aplicarFiltros);
+        btnBuscarManual.classList.add("visivel");
+    } else {
+        inputBusca.addEventListener("input", aplicarFiltros);
+        btnBuscarManual.classList.remove("visivel");
+    }
+}
+
+document.getElementById("buscar").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") aplicarFiltros();
+});
+
+document.getElementById("btnBuscarManual").addEventListener("click", aplicarFiltros);
+
+document.getElementById("modoBusca").addEventListener("change", function() {
+    salvarModoBusca(this.value);
+    aplicarModoBusca(this.value);
+});
+
+(function iniciarModoBusca() {
+    const modoSalvo = carregarModoBusca();
+    document.getElementById("modoBusca").value = modoSalvo;
+    aplicarModoBusca(modoSalvo);
+})();
 
 // Filtro por empresa (botões)
 document.querySelectorAll(".btn-empresa").forEach(btn => {
