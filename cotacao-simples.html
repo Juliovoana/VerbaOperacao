@@ -10,6 +10,16 @@
     body { font-family: Arial, sans-serif; margin: 20px; color: #222; }
     h2 { margin-bottom: 4px; }
     .subtitulo { color: #666; font-size: 0.9em; margin-top: 0; margin-bottom: 20px; }
+    .numero-cotacao {
+        display: inline-block;
+        background: #eef2ff;
+        color: #1565c0;
+        font-weight: bold;
+        font-size: 0.9em;
+        padding: 5px 12px;
+        border-radius: 20px;
+        margin-bottom: 16px;
+    }
 
     .cabecalho-cotacao {
         display: grid;
@@ -226,6 +236,7 @@
     .item-cotacao-salva:hover { background: #f9f5fd; }
     .info-cotacao-salva { font-size: 0.88em; }
     .info-cotacao-salva .cliente-salvo { font-weight: bold; color: #6a1b9a; }
+    .info-cotacao-salva .numero-salvo { font-weight: bold; color: #1565c0; }
     .btn-carregar-cotacao {
         background-color: #6a1b9a;
         color: #fff;
@@ -346,6 +357,7 @@
 
 <h2>Cotação de Produtos</h2>
 <p class="subtitulo">Monte um orçamento avulso, some os valores e gere o PDF — nada fica salvo em banco de dados.</p>
+<span id="numeroCotacaoAtual" class="numero-cotacao">Nova cotação (ainda sem número)</span>
 
 <div class="cabecalho-cotacao">
     <div>
@@ -481,11 +493,25 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 // ===== Link padrão do catálogo (mesmo Apps Script já usado nos outros arquivos) =====
-const URL_CATALOGO = "https://script.google.com/macros/s/AKfycbztmu6_Bjt1YTuPLZPGwkyUpB1o590IJwzgOVADCD26MSN1t90O14b5s1TAYO49JsY0/exec";
+const URL_CATALOGO = "https://script.google.com/macros/s/AKfycbz6wdYirt-5LqIzhNeT4UTSsjdpiicPDx0N9w9-a2-_bhS8XVojMp2kuRYRZpCdABFY/exec";
 
 let catalogo = [];
 let carrinho = [];
 let idCotacaoAtual = null; // null = nova cotação; string = editando uma cotação já salva
+
+function atualizarIndicadorNumero() {
+    const el = document.getElementById("numeroCotacaoAtual");
+    if (idCotacaoAtual) {
+        el.textContent = `Cotação Nº ${formatarNumeroCotacao(idCotacaoAtual)}`;
+    } else {
+        el.textContent = "Nova cotação (ainda sem número)";
+    }
+}
+
+// Formata o número da cotação com zeros à esquerda (ex: 1 -> 001)
+function formatarNumeroCotacao(numero) {
+    return String(numero).padStart(3, "0");
+}
 
 document.getElementById("campoData").value = new Date().toISOString().slice(0, 10);
 
@@ -760,6 +786,7 @@ document.getElementById("btnLimparCotacao").addEventListener("click", function()
     if (confirm("Tem certeza que deseja limpar todos os itens da cotação?")) {
         carrinho = [];
         idCotacaoAtual = null;
+        atualizarIndicadorNumero();
         document.getElementById("campoCliente").value = "";
         document.getElementById("campoVendedor").value = "";
         document.getElementById("campoData").value = new Date().toISOString().slice(0, 10);
@@ -790,10 +817,14 @@ function gerarDocumentoPdf() {
 
     doc.setFontSize(16);
     doc.text("Cotação de Produtos", 14, 18);
+    doc.setFontSize(11);
+    doc.setTextColor(21, 101, 192);
+    doc.text(idCotacaoAtual ? `Nº ${formatarNumeroCotacao(idCotacaoAtual)}` : "(rascunho, não salvo)", 14, 25);
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
-    doc.text(`Cliente: ${cliente}`, 14, 27);
-    doc.text(`Vendedor: ${vendedor}`, 14, 33);
-    doc.text(`Data: ${formatarDataBR(dataForm)}`, 14, 39);
+    doc.text(`Cliente: ${cliente}`, 14, 33);
+    doc.text(`Vendedor: ${vendedor}`, 14, 39);
+    doc.text(`Data: ${formatarDataBR(dataForm)}`, 14, 45);
 
     const linhas = carrinho.map(item => [
         item.codigo,
@@ -804,7 +835,7 @@ function gerarDocumentoPdf() {
     ]);
 
     doc.autoTable({
-        startY: 46,
+        startY: 52,
         head: [["Código", "Descrição", "Valor Unit.", "Qtd.", "Subtotal"]],
         body: linhas,
         styles: { fontSize: 9 },
@@ -931,8 +962,9 @@ document.getElementById("btnSalvarCotacao").addEventListener("click", async func
 
         if (resposta.sucesso) {
             idCotacaoAtual = resposta.id;
+            atualizarIndicadorNumero();
             statusSalvaEl.className = "editando";
-            statusSalvaEl.textContent = `✅ Cotação salva (editando esta cotação a partir de agora).`;
+            statusSalvaEl.textContent = `✅ Cotação Nº ${formatarNumeroCotacao(resposta.id)} salva com sucesso.`;
         } else {
             statusSalvaEl.className = "erro";
             statusSalvaEl.textContent = "Erro ao salvar: " + (resposta.erro || "motivo desconhecido.");
@@ -970,7 +1002,7 @@ async function buscarCotacoesSalvas() {
             div.className = "item-cotacao-salva";
             div.innerHTML = `
                 <div class="info-cotacao-salva">
-                    <span class="cliente-salvo">${c.cliente || "(sem nome)"}</span> — ${formatarMoeda(c.total)}<br>
+                    <span class="numero-salvo">Nº ${formatarNumeroCotacao(c.id)}</span> · <span class="cliente-salvo">${c.cliente || "(sem nome)"}</span> — ${formatarMoeda(c.total)}<br>
                     ${c.qtdItens} ${c.qtdItens === 1 ? "item" : "itens"} · Salvo em ${dataRegistro}
                 </div>
                 <button class="btn-carregar-cotacao">Carregar</button>
@@ -1019,11 +1051,12 @@ async function carregarCotacaoSalva(id) {
         }));
 
         idCotacaoAtual = id;
+        atualizarIndicadorNumero();
         renderizarCarrinho();
 
         document.getElementById("painelBuscaSalva").classList.remove("aberto");
         statusSalvaEl.className = "editando";
-        statusSalvaEl.textContent = `📂 Editando cotação de ${resposta.cliente} — qualquer alteração e novo "Salvar" atualiza este mesmo registro.`;
+        statusSalvaEl.textContent = `📂 Editando cotação Nº ${formatarNumeroCotacao(id)} de ${resposta.cliente} — qualquer alteração e novo "Salvar" atualiza este mesmo registro.`;
     } catch (err) {
         console.error(err);
         statusSalvaEl.className = "erro";
@@ -1032,6 +1065,7 @@ async function carregarCotacaoSalva(id) {
 }
 
 renderizarCarrinho();
+atualizarIndicadorNumero();
 carregarCatalogo();
 </script>
 </body>
