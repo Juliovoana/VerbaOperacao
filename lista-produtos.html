@@ -361,11 +361,12 @@ let empresaAtual = "todos"; // "todos", "BT" ou "HS"
 // Aplica o filtro de empresa + o filtro de busca textual juntos
 function aplicarFiltros() {
     const termo = document.getElementById("buscar").value.toLowerCase();
+    const palavras = termo.split(/\s+/).filter(p => p.length > 0);
     const filtrados = produtos.filter(p => {
         const prefixo = p.codigo.substring(0, 2).toUpperCase();
         const passaEmpresa = empresaAtual === "todos" || prefixo === empresaAtual;
-        const passaBusca = p.codigo.toLowerCase().includes(termo) ||
-                            p.descricao.toLowerCase().includes(termo);
+        const textoCompleto = (p.codigo + " " + p.descricao).toLowerCase();
+        const passaBusca = palavras.every(palavra => textoCompleto.includes(palavra));
         return passaEmpresa && passaBusca;
     });
     carregarTabela(filtrados);

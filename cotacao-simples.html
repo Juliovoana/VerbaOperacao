@@ -21,6 +21,92 @@
         margin-bottom: 16px;
     }
 
+    /* ===== Cabeçalho da empresa (logo + dados) ===== */
+    .cabecalho-empresa {
+        display: none;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 16px;
+        padding-bottom: 14px;
+        border-bottom: 2px solid #eee;
+    }
+    .cabecalho-empresa.visivel { display: flex; }
+    .cabecalho-empresa img {
+        max-height: 64px;
+        max-width: 140px;
+        object-fit: contain;
+    }
+    .cabecalho-empresa .dados-empresa { font-size: 0.85em; color: #444; line-height: 1.4; }
+    .cabecalho-empresa .dados-empresa strong { font-size: 1.05em; color: #222; }
+
+    .btn-config-empresa {
+        background-color: #555;
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 34px;
+        height: 34px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        float: right;
+    }
+    .btn-config-empresa:hover { background-color: #333; }
+    .btn-config-empresa svg { width: 17px; height: 17px; }
+
+    #painelConfigEmpresa {
+        display: none;
+        background: #f7f7f7;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 20px;
+        clear: both;
+    }
+    #painelConfigEmpresa.aberto { display: block; }
+    #painelConfigEmpresa h4 { margin-top: 0; }
+    .grade-config-empresa {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    .grade-config-empresa label {
+        font-size: 0.8em;
+        font-weight: bold;
+        color: #555;
+        display: block;
+        margin-bottom: 4px;
+    }
+    .grade-config-empresa input[type="text"] {
+        max-width: none;
+        margin-bottom: 0;
+    }
+    .linha-logo-upload {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 14px;
+    }
+    #previewLogo {
+        max-height: 60px;
+        max-width: 120px;
+        object-fit: contain;
+        border: 1px dashed #ccc;
+        border-radius: 4px;
+        padding: 4px;
+        display: none;
+    }
+    #previewLogo.visivel { display: block; }
+    #statusConfigEmpresa {
+        display: block;
+        font-size: 0.85em;
+        margin-top: 8px;
+    }
+    #statusConfigEmpresa.erro { color: #b00020; }
+    #statusConfigEmpresa.sucesso { color: #2e7d32; }
+
     .cabecalho-cotacao {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
@@ -355,6 +441,49 @@
 </head>
 <body>
 
+<button id="btnConfigEmpresa" class="btn-config-empresa" title="Configurar logo e dados da empresa">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+</button>
+<div id="cabecalhoEmpresa" class="cabecalho-empresa">
+    <img id="logoEmpresaExibicao" src="" alt="Logo da empresa">
+    <div class="dados-empresa" id="dadosEmpresaExibicao"></div>
+</div>
+
+<div id="painelConfigEmpresa">
+    <h4>🏢 Dados da empresa (aparecem na cotação e no PDF)</h4>
+    <div class="linha-logo-upload">
+        <input type="file" id="inputLogoEmpresa" accept="image/*">
+        <img id="previewLogo" src="" alt="Pré-visualização do logo">
+    </div>
+    <div class="grade-config-empresa">
+        <div>
+            <label for="empresaNome">Nome da empresa</label>
+            <input type="text" id="empresaNome" placeholder="Nome da sua empresa">
+        </div>
+        <div>
+            <label for="empresaCnpj">CNPJ</label>
+            <input type="text" id="empresaCnpj" placeholder="00.000.000/0000-00">
+        </div>
+        <div>
+            <label for="empresaEndereco">Endereço</label>
+            <input type="text" id="empresaEndereco" placeholder="Rua, número, cidade - UF">
+        </div>
+        <div>
+            <label for="empresaTelefone">Telefone</label>
+            <input type="text" id="empresaTelefone" placeholder="(00) 00000-0000">
+        </div>
+        <div>
+            <label for="empresaEmail">E-mail</label>
+            <input type="text" id="empresaEmail" placeholder="contato@empresa.com">
+        </div>
+    </div>
+    <button class="btn-acao btn-salvar-cotacao" id="btnSalvarConfigEmpresa">Salvar dados da empresa</button>
+    <span id="statusConfigEmpresa"></span>
+</div>
+
 <h2>Cotação de Produtos</h2>
 <p class="subtitulo">Monte um orçamento avulso, some os valores e gere o PDF — nada fica salvo em banco de dados.</p>
 <span id="numeroCotacaoAtual" class="numero-cotacao">Nova cotação (ainda sem número)</span>
@@ -515,6 +644,17 @@ function formatarNumeroCotacao(numero) {
 
 document.getElementById("campoData").value = new Date().toISOString().slice(0, 10);
 
+// Força maiúsculas nos campos Cliente e Vendedor, mesmo com Caps Lock desligado
+function forcarMaiusculas(input) {
+    input.addEventListener("input", function() {
+        const posicaoCursor = this.selectionStart;
+        this.value = this.value.toUpperCase();
+        this.setSelectionRange(posicaoCursor, posicaoCursor);
+    });
+}
+forcarMaiusculas(document.getElementById("campoCliente"));
+forcarMaiusculas(document.getElementById("campoVendedor"));
+
 // ===== Utilidades de número/moeda (mesmas dos outros arquivos) =====
 function paraNumero(texto) {
     if (texto === undefined || texto === null) return 0;
@@ -630,9 +770,12 @@ function buscarProdutos() {
         return;
     }
 
-    const encontrados = catalogo.filter(p =>
-        p.codigo.toLowerCase().includes(termo) || p.descricao.toLowerCase().includes(termo)
-    ).slice(0, 30);
+    const palavras = termo.split(/\s+/).filter(p => p.length > 0);
+
+    const encontrados = catalogo.filter(p => {
+        const textoCompleto = (p.codigo + " " + p.descricao).toLowerCase();
+        return palavras.every(palavra => textoCompleto.includes(palavra));
+    }).slice(0, 30);
 
     if (encontrados.length === 0) {
         resultadosEl.innerHTML = '<div class="item-resultado">Nenhum produto encontrado.</div>';
@@ -815,16 +958,50 @@ function gerarDocumentoPdf() {
     const vendedor = document.getElementById("campoVendedor").value.trim() || "-";
     const dataForm = document.getElementById("campoData").value;
 
+    let y0 = 18; // posição vertical inicial do título "Cotação de Produtos"
+
+    if (configEmpresa && configEmpresa.existe) {
+        const temLogo = !!configEmpresa.logoBase64;
+        const xTexto = temLogo ? 48 : 14;
+
+        if (temLogo) {
+            try {
+                doc.addImage(`data:${configEmpresa.logoMimeType};base64,${configEmpresa.logoBase64}`, undefined, 14, 8, 28, 18);
+            } catch (e) {
+                console.error("Erro ao inserir logo no PDF:", e);
+            }
+        }
+
+        doc.setFontSize(11);
+        doc.setFont(undefined, "bold");
+        if (configEmpresa.nomeEmpresa) doc.text(configEmpresa.nomeEmpresa, xTexto, 13);
+        doc.setFont(undefined, "normal");
+        doc.setFontSize(8.5);
+        doc.setTextColor(80, 80, 80);
+
+        let yEmpresa = 18;
+        if (configEmpresa.cnpj) { doc.text(`CNPJ: ${configEmpresa.cnpj}`, xTexto, yEmpresa); yEmpresa += 4.5; }
+        if (configEmpresa.endereco) { doc.text(configEmpresa.endereco, xTexto, yEmpresa); yEmpresa += 4.5; }
+        const contato = [configEmpresa.telefone, configEmpresa.email].filter(Boolean).join("  ·  ");
+        if (contato) { doc.text(contato, xTexto, yEmpresa); }
+
+        doc.setTextColor(0, 0, 0);
+        doc.setDrawColor(220, 220, 220);
+        doc.line(14, 30, 196, 30);
+
+        y0 = 40; // empurra o restante do documento pra baixo, abrindo espaço pro cabeçalho
+    }
+
     doc.setFontSize(16);
-    doc.text("Cotação de Produtos", 14, 18);
+    doc.text("Cotação de Produtos", 14, y0);
     doc.setFontSize(11);
     doc.setTextColor(21, 101, 192);
-    doc.text(idCotacaoAtual ? `Nº ${formatarNumeroCotacao(idCotacaoAtual)}` : "(rascunho, não salvo)", 14, 25);
+    doc.text(idCotacaoAtual ? `Nº ${formatarNumeroCotacao(idCotacaoAtual)}` : "(rascunho, não salvo)", 14, y0 + 7);
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
-    doc.text(`Cliente: ${cliente}`, 14, 33);
-    doc.text(`Vendedor: ${vendedor}`, 14, 39);
-    doc.text(`Data: ${formatarDataBR(dataForm)}`, 14, 45);
+    doc.text(`Cliente: ${cliente}`, 14, y0 + 15);
+    doc.text(`Vendedor: ${vendedor}`, 14, y0 + 21);
+    doc.text(`Data: ${formatarDataBR(dataForm)}`, 14, y0 + 27);
 
     const linhas = carrinho.map(item => [
         item.codigo,
@@ -835,7 +1012,7 @@ function gerarDocumentoPdf() {
     ]);
 
     doc.autoTable({
-        startY: 52,
+        startY: y0 + 34,
         head: [["Código", "Descrição", "Valor Unit.", "Qtd.", "Subtotal"]],
         body: linhas,
         styles: { fontSize: 9 },
@@ -867,7 +1044,24 @@ function gerarDocumentoPdf() {
     return doc;
 }
 
-document.getElementById("btnGerarPdf").addEventListener("click", async function() {
+function gerarEVisualizarPdf() {
+    if (carrinho.length === 0) {
+        alert("Adicione ao menos um produto antes de gerar o PDF.");
+        return;
+    }
+
+    if (!window.jspdf) {
+        alert("Não foi possível carregar a biblioteca de PDF (verifique sua conexão). Tentando via impressão do navegador...");
+        window.print();
+        return;
+    }
+
+    const doc = gerarDocumentoPdf();
+    const blobUrl = doc.output("bloburl");
+    window.open(blobUrl, "_blank");
+}
+
+async function gerarEBaixarOuCompartilharPdf() {
     if (carrinho.length === 0) {
         alert("Adicione ao menos um produto antes de gerar o PDF.");
         return;
@@ -902,7 +1096,9 @@ document.getElementById("btnGerarPdf").addEventListener("click", async function(
     }
 
     doc.save(nomeArquivo);
-});
+}
+
+document.getElementById("btnGerarPdf").addEventListener("click", gerarEBaixarOuCompartilharPdf);
 
 // ===== Salvar / buscar / carregar cotações no Sheets (via Apps Script) =====
 const statusSalvaEl = document.getElementById("statusCotacaoSalva");
@@ -964,6 +1160,8 @@ document.getElementById("btnSalvarCotacao").addEventListener("click", async func
             idCotacaoAtual = resposta.id;
             atualizarIndicadorNumero();
             statusSalvaEl.className = "editando";
+            statusSalvaEl.textContent = `✅ Cotação Nº ${formatarNumeroCotacao(resposta.id)} salva com sucesso. Gerando PDF...`;
+            await gerarEVisualizarPdf();
             statusSalvaEl.textContent = `✅ Cotação Nº ${formatarNumeroCotacao(resposta.id)} salva com sucesso.`;
         } else {
             statusSalvaEl.className = "erro";
@@ -1036,8 +1234,8 @@ async function carregarCotacaoSalva(id) {
             return;
         }
 
-        document.getElementById("campoCliente").value = resposta.cliente || "";
-        document.getElementById("campoVendedor").value = resposta.vendedor || "";
+        document.getElementById("campoCliente").value = (resposta.cliente || "").toUpperCase();
+        document.getElementById("campoVendedor").value = (resposta.vendedor || "").toUpperCase();
         document.getElementById("campoData").value = resposta.data || new Date().toISOString().slice(0, 10);
         document.getElementById("tipoDesconto").value = resposta.tipoDesconto || "none";
         document.getElementById("valorDesconto").value = resposta.valorDesconto || "";
@@ -1064,9 +1262,137 @@ async function carregarCotacaoSalva(id) {
     }
 }
 
+// ===== Configuração da empresa (logo + dados) =====
+let configEmpresa = null;
+let logoBase64Selecionado = "";
+let logoMimeTypeSelecionado = "";
+const TAMANHO_MAX_LOGO_BYTES = 250 * 1024; // 250 KB
+
+function renderizarCabecalhoEmpresa() {
+    const cabecalho = document.getElementById("cabecalhoEmpresa");
+    if (!configEmpresa || !configEmpresa.existe) {
+        cabecalho.classList.remove("visivel");
+        return;
+    }
+
+    const imgEl = document.getElementById("logoEmpresaExibicao");
+    if (configEmpresa.logoBase64) {
+        imgEl.src = `data:${configEmpresa.logoMimeType};base64,${configEmpresa.logoBase64}`;
+        imgEl.style.display = "block";
+    } else {
+        imgEl.style.display = "none";
+    }
+
+    const linhas = [];
+    if (configEmpresa.nomeEmpresa) linhas.push(`<strong>${configEmpresa.nomeEmpresa}</strong>`);
+    if (configEmpresa.cnpj) linhas.push(`CNPJ: ${configEmpresa.cnpj}`);
+    if (configEmpresa.endereco) linhas.push(configEmpresa.endereco);
+    const contato = [configEmpresa.telefone, configEmpresa.email].filter(Boolean).join(" · ");
+    if (contato) linhas.push(contato);
+
+    document.getElementById("dadosEmpresaExibicao").innerHTML = linhas.join("<br>");
+    cabecalho.classList.add("visivel");
+}
+
+async function carregarConfigEmpresa() {
+    try {
+        const url = `${URL_CATALOGO}?acao=buscarConfigEmpresa`;
+        const respostaTexto = await buscarViaJSONP(url);
+        configEmpresa = typeof respostaTexto === "string" ? JSON.parse(respostaTexto) : respostaTexto;
+        renderizarCabecalhoEmpresa();
+
+        if (configEmpresa && configEmpresa.existe) {
+            document.getElementById("empresaNome").value = configEmpresa.nomeEmpresa || "";
+            document.getElementById("empresaCnpj").value = configEmpresa.cnpj || "";
+            document.getElementById("empresaEndereco").value = configEmpresa.endereco || "";
+            document.getElementById("empresaTelefone").value = configEmpresa.telefone || "";
+            document.getElementById("empresaEmail").value = configEmpresa.email || "";
+            if (configEmpresa.logoBase64) {
+                const preview = document.getElementById("previewLogo");
+                preview.src = `data:${configEmpresa.logoMimeType};base64,${configEmpresa.logoBase64}`;
+                preview.classList.add("visivel");
+            }
+        }
+    } catch (err) {
+        console.error("Não foi possível carregar a configuração da empresa:", err);
+    }
+}
+
+document.getElementById("btnConfigEmpresa").addEventListener("click", function() {
+    document.getElementById("painelConfigEmpresa").classList.toggle("aberto");
+});
+
+document.getElementById("inputLogoEmpresa").addEventListener("change", function(e) {
+    const arquivo = e.target.files[0];
+    if (!arquivo) return;
+
+    const statusEl2 = document.getElementById("statusConfigEmpresa");
+    if (arquivo.size > TAMANHO_MAX_LOGO_BYTES) {
+        statusEl2.className = "erro";
+        statusEl2.textContent = `Imagem muito grande (${Math.round(arquivo.size / 1024)}KB). Use uma imagem de até 250KB.`;
+        e.target.value = "";
+        return;
+    }
+
+    const leitor = new FileReader();
+    leitor.onload = function(evento) {
+        const resultado = evento.target.result; // data:image/png;base64,AAAA...
+        const partes = resultado.split(",");
+        logoMimeTypeSelecionado = partes[0].match(/data:(.*);base64/)[1];
+        logoBase64Selecionado = partes[1];
+
+        const preview = document.getElementById("previewLogo");
+        preview.src = resultado;
+        preview.classList.add("visivel");
+
+        statusEl2.className = "";
+        statusEl2.textContent = "Imagem carregada. Clique em \"Salvar dados da empresa\" para gravar.";
+    };
+    leitor.readAsDataURL(arquivo);
+});
+
+document.getElementById("btnSalvarConfigEmpresa").addEventListener("click", async function() {
+    const statusEl2 = document.getElementById("statusConfigEmpresa");
+    statusEl2.className = "";
+    statusEl2.textContent = "Salvando...";
+
+    const payload = {
+        nomeEmpresa: document.getElementById("empresaNome").value.trim(),
+        cnpj: document.getElementById("empresaCnpj").value.trim(),
+        endereco: document.getElementById("empresaEndereco").value.trim(),
+        telefone: document.getElementById("empresaTelefone").value.trim(),
+        email: document.getElementById("empresaEmail").value.trim(),
+        logoBase64: logoBase64Selecionado,
+        logoMimeType: logoMimeTypeSelecionado
+    };
+
+    try {
+        await fetch(`${URL_CATALOGO}?acao=salvarConfigEmpresa`, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+        });
+
+        // Modo no-cors não deixa ler a resposta; busca de novo para confirmar e atualizar a tela
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        await carregarConfigEmpresa();
+
+        statusEl2.className = "sucesso";
+        statusEl2.textContent = "✅ Dados da empresa salvos com sucesso.";
+        logoBase64Selecionado = "";
+        logoMimeTypeSelecionado = "";
+    } catch (err) {
+        console.error(err);
+        statusEl2.className = "erro";
+        statusEl2.textContent = "Não foi possível salvar. Verifique sua conexão.";
+    }
+});
+
 renderizarCarrinho();
 atualizarIndicadorNumero();
 carregarCatalogo();
+carregarConfigEmpresa();
 </script>
 </body>
 </html>
